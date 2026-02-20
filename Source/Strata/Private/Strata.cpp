@@ -47,7 +47,7 @@ void FStrataModule::PluginButtonClicked()
 {
 	// Put your "OnButtonClicked" stuff here
 	FText DialogText = FText::Format(
-		LOCTEXT("PluginButtonDialogText", "Hello, World!  Add code to {0} in {1} to override this button's actions"),
+		LOCTEXT("PluginButtonDialogText", "Hello, World! Add code to {0} in {1} to override this button's actions"),
 		FText::FromString(TEXT("FStrataModule::PluginButtonClicked()")),
 		FText::FromString(TEXT("Strata.cpp"))
 	);
