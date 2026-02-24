@@ -20,8 +20,7 @@ public:
 
 private:
 	TSharedRef<SWidget> GenerateStrataMenu();
+
 	void RegisterMenus();
 
-private:
-	//TSharedPtr<class FUICommandList> PluginCommands;
 };
