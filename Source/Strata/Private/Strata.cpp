@@ -2,11 +2,9 @@
 
 #include "Strata.h"
 #include "StrataStyle.h"
-//#include "StrataCommands.h"
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
 
-//static const FName StrataTabName("Strata");
 
 #define LOCTEXT_NAMESPACE "FStrataModule"
 
@@ -17,15 +15,6 @@ void FStrataModule::StartupModule()
 	FStrataStyle::Initialize();
 	FStrataStyle::ReloadTextures();
 
-	//FStrataCommands::Register();
-
-	//PluginCommands = MakeShareable(new FUICommandList);
-
-	/*PluginCommands->MapAction(
-		FStrataCommands::Get().PluginAction,
-		FExecuteAction::CreateRaw(this, &FStrataModule::PluginButtonClicked),
-		FCanExecuteAction());*/
-
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FStrataModule::RegisterMenus));
 }
 
@@ -35,38 +24,31 @@ void FStrataModule::ShutdownModule()
 	// we call this function before unloading the module.
 
 	UToolMenus::UnRegisterStartupCallback(this);
-
 	UToolMenus::UnregisterOwner(this);
 
 	FStrataStyle::Shutdown();
-
-	//FStrataCommands::Unregister();
 }
-
-//void FStrataModule::PluginButtonClicked()
-//{
-//	// Put your "OnButtonClicked" stuff here
-//	FText DialogText = LOCTEXT("PluginButtonDialogText", "Hello, World!");
-//	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
-//}
 
 TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 {
 	FMenuBuilder MenuBuilder(true, nullptr);
 
-	MenuBuilder.BeginSection("StrataActions", LOCTEXT("StrataActionsHeader", "Strata Tools"));
-	//MenuBuilder.AddMenuEntry(FStrataCommands::Get().PluginAction);
+	// Separator for different sections
 	//MenuBuilder.AddMenuSeparator();
 
-	// Just duplicate this to add more menu options, everything in the lambda will be executed upon click.
+	MenuBuilder.BeginSection("StrataActions", LOCTEXT("StrataActionsHeader", "Strata Tools"));
+
+	// Just duplicate this to add more menu options
 	MenuBuilder.AddMenuEntry(
 		LOCTEXT("ExtraActionLabel", "Hello"),
 		LOCTEXT("ExtraActionTooltip", "World"),
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateLambda([]() {
+			// Everything inside of this function will be executed on-click
 			FText DialogText = LOCTEXT("PluginButtonDialogText", "Hello, World!");
 			FMessageDialog::Open(EAppMsgType::Ok, DialogText);
-			}))
+			}
+		))
 	);
 
 	MenuBuilder.AddMenuEntry(
@@ -74,6 +56,7 @@ TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 		LOCTEXT("ExtraActionTooltip", "Hello"),
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateLambda([]() {
+			// Everything inside of this function will be executed on-click
 			FText DialogText = LOCTEXT("PluginButtonDialogText", "World, Hello!");
 			FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 			}))
@@ -89,13 +72,6 @@ void FStrataModule::RegisterMenus()
 	// Owner will be used for cleanup in call to UToolMenus::UnregisterOwner
 	FToolMenuOwnerScoped OwnerScoped(this);
 
-	/*{
-		UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.Window");
-		{
-			FToolMenuSection& Section = Menu->FindOrAddSection("WindowLayout");
-			Section.AddMenuEntryWithCommandList(FStrataCommands::Get().PluginAction, PluginCommands);
-		}
-	}*/
 
 	UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.PlayToolBar");
 	FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("PluginTools");
@@ -110,9 +86,6 @@ void FStrataModule::RegisterMenus()
 	);
 
 	Section.AddEntry(ComboButtonEntry);
-	/*FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FStrataCommands::Get().PluginAction));
-	Entry.SetCommandList(PluginCommands);*/
-
 }
 
 #undef LOCTEXT_NAMESPACE
