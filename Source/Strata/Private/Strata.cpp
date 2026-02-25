@@ -4,7 +4,6 @@
 #include "StrataStyle.h"
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
-#include "Widgets/Input/SEditableTextBox.h"
 
 
 #define LOCTEXT_NAMESPACE "FStrataModule"
@@ -106,6 +105,7 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 				// Textbox
 				+ SVerticalBox::Slot().AutoHeight().Padding(10)
 				[
+					// SAssignNew here as we need to be able to reference this text box in other functions
 					SAssignNew(TextBox, SEditableTextBox)
 						.HintText(LOCTEXT("Hint", "New branch name..."))
 						.OnTextCommitted_Lambda([this, &InputWindow, &TextBox](const FText& /*Unused Textbox Response*/, ETextCommit::Type CommitType) {
