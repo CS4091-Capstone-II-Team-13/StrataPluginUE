@@ -93,7 +93,6 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 				.HasCloseButton(true);
 
 			TSharedPtr<SEditableTextBox> TextBox;
-			TSharedPtr<SButton> OKButton;
 
 			InputWindow->SetContent(
 				SNew(SVerticalBox)
@@ -108,9 +107,9 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 					// SAssignNew here as we need to be able to reference this text box in other functions
 					SAssignNew(TextBox, SEditableTextBox)
 						.HintText(LOCTEXT("Hint", "New branch name..."))
-						.OnTextCommitted_Lambda([this, &InputWindow, &TextBox](const FText& /*Unused Textbox Response*/, ETextCommit::Type CommitType) {
+						.OnTextCommitted_Lambda([this, &InputWindow](const FText& TextBoxResponse, ETextCommit::Type CommitType) {
 						if (CommitType == ETextCommit::OnEnter) {
-							this->OnCreateBranchConfirmed(InputWindow, TextBox);
+							this->OnCreateBranchConfirmed(InputWindow, TextBoxResponse.ToString());
 						}
 							})
 				]
@@ -121,7 +120,7 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 						// OK button
 						+ SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 10, 0)
 						[
-							SAssignNew(OKButton, SButton)
+							SNew(SButton)
 								.Text(LOCTEXT("OK", "OK"))
 								.IsFocusable(true)
 								// Uses Unreal Engine's default accent blue color
@@ -129,7 +128,7 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 								.ButtonColorAndOpacity(FAppStyle::Get().GetSlateColor("Colors.AccentBlue"))
 								.OnClicked_Lambda([this, InputWindow, TextBox]() {
 								// On OK click, confirm branch creation request
-								OnCreateBranchConfirmed(InputWindow, TextBox);
+								OnCreateBranchConfirmed(InputWindow, TextBox->GetText().ToString());
 								return FReply::Handled();
 									})
 						]
@@ -138,7 +137,7 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 						[
 							SNew(SButton)
 								.Text(LOCTEXT("CANCEL", "CANCEL"))
-								.OnClicked_Lambda([InputWindow, TextBox]() {
+								.OnClicked_Lambda([InputWindow]() {
 								// On CANCEL click, close window
 								InputWindow->RequestDestroyWindow();
 								return FReply::Handled();
@@ -157,15 +156,14 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 	);
 }
 
-FReply FStrataModule::OnCreateBranchConfirmed(TSharedPtr<SWindow> InputWindow, TSharedPtr<SEditableTextBox> TextBox)
+FReply FStrataModule::OnCreateBranchConfirmed(TSharedPtr<SWindow> InputWindow, FString NewBranchName)
 {
-	FString NewBranchName = TextBox->GetText().ToString();
 	// TODO: If branch already exists, prompt user asking if they want to overwrite (delete and re-add) or cancel
 	// TODO: Otherwise, create the new branch and switch to it
 
 	// TODO: Remove, this is temporary
 	FText DialogText = FText::Format(
-		LOCTEXT("PluginButtonDialogText", "[Temporary] Now the plugin would try to create a new branch with the name \"{0}\""),
+		LOCTEXT("PluginButtonDialogText", "[Temporary] Now the plugin would try to create and switch to a new branch with the name \"{0}\""),
 		FText::FromString(NewBranchName)
 	);
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);

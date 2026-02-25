@@ -21,7 +21,7 @@ public:
 private:
 	TSharedRef<SWidget> GenerateStrataMenu();
 	void GenerateBranchMenu(FMenuBuilder& MenuBuilder);
-	FReply OnCreateBranchConfirmed(TSharedPtr<SWindow> InputWindow, TSharedPtr<SEditableTextBox> TextBox);
+	FReply OnCreateBranchConfirmed(TSharedPtr<SWindow> InputWindow, FString NewBranchName);
 
 	void RegisterMenus();
 
