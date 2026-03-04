@@ -5,10 +5,6 @@
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
 
-#include "HAL/PlatformProcess.h"
-#include "Misc/Paths.h"
-#include "Misc/FileHelper.h"
-#include "HAL/FileManager.h"
 
 
 #define LOCTEXT_NAMESPACE "FStrataModule"
