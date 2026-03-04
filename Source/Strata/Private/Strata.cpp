@@ -5,6 +5,11 @@
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
 
+#include "HAL/PlatformProcess.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
+#include "HAL/FileManager.h"
+
 
 #define LOCTEXT_NAMESPACE "FStrataModule"
 
@@ -47,15 +52,10 @@ TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 
 	// Duplicate this to add more menu options
 	MenuBuilder.AddMenuEntry(
-		LOCTEXT("ExtraActionLabel", "Hello, World!"),
-		LOCTEXT("ExtraActionTooltip", "Well hello there!"),
+		LOCTEXT("ExtraActionLabel", "Settings"),
+		LOCTEXT("ExtraActionTooltip", "Open Settings"),
 		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateLambda([]() {
-			// Everything inside of this function will be executed on-click
-			FText DialogText = LOCTEXT("PluginButtonDialogText", "[Temporary] World, Hello!");
-			FMessageDialog::Open(EAppMsgType::Ok, DialogText);
-			}
-		))
+		FUIAction(FExecuteAction::CreateRaw(this, &FStrataModule::OpenSettingsFile))
 	);
 
 	MenuBuilder.EndSection();
@@ -191,6 +191,23 @@ void FStrataModule::RegisterMenus()
 	);
 
 	Section.AddEntry(ComboButtonEntry);
+}
+
+// TODO: Need to move the "create file if it doesn't exist" logic to a more appropriate place, this is just temporary for testing purposes
+void FStrataModule::OpenSettingsFile() {
+	FString SettingsPath = FPaths::ProjectPluginsDir() / TEXT("StrataPluginUE/Resources/StrataSettings.json");
+	
+	FString AbsPath = FPaths::ConvertRelativePathToFull(SettingsPath);
+	FPaths::NormalizeFilename(AbsPath);
+
+	// Create file if it doesn't exist
+	if (!FPaths::FileExists(AbsPath))
+	{
+		FString DefaultSettings = TEXT("{\n  \"cliPath\": \"\",\n  \"server\": \"\",\n  \"user\": \"\"\n}\n");
+		FFileHelper::SaveStringToFile(DefaultSettings, *AbsPath);
+	}
+
+	FPlatformProcess::LaunchFileInDefaultExternalApplication(*AbsPath);
 }
 
 #undef LOCTEXT_NAMESPACE
