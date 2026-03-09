@@ -24,6 +24,7 @@ private:
 	FReply OnCreateBranchConfirmed(TSharedPtr<SWindow> InputWindow, FString NewBranchName);
 
 	void RegisterMenus();
+	void OpenCLI();
 	void OpenSettingsFile();
 
 };

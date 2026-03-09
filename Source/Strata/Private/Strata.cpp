@@ -46,10 +46,18 @@ TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 		FNewMenuDelegate::CreateRaw(this, &FStrataModule::GenerateBranchMenu)
 	);
 
-	// Duplicate this to add more menu options
+	// Duplicate this to add more menu buttons
 	MenuBuilder.AddMenuEntry(
-		LOCTEXT("ExtraActionLabel", "Settings"),
-		LOCTEXT("ExtraActionTooltip", "Open Settings"),
+		LOCTEXT("ExtraActionLabel", "Open CLI..."),
+		LOCTEXT("ExtraActionTooltip", "Open Strata's Command Line Interface."),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateRaw(this, &FStrataModule::OpenCLI))
+	);
+
+	// Duplicate this to add more menu buttons
+	MenuBuilder.AddMenuEntry(
+		LOCTEXT("ExtraActionLabel", "Settings..."), // Buttons that open external programs should end with "..."
+		LOCTEXT("ExtraActionTooltip", "Open Settings via a text editor."),
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateRaw(this, &FStrataModule::OpenSettingsFile))
 	);
@@ -189,10 +197,20 @@ void FStrataModule::RegisterMenus()
 	Section.AddEntry(ComboButtonEntry);
 }
 
+void FStrataModule::OpenCLI() {
+	// TODO: This path should be changable via the settings
+	FString CLIPath = TEXT("C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe");
+	FString ProjectDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
+	// TODO: This should be change to 'strata help'
+	FString Arguments = FString::Printf(TEXT("-NoExit -Command \"git help; cd '%s'\""), *ProjectDir);
+
+	FPlatformProcess::LaunchFileInDefaultExternalApplication(*CLIPath, *Arguments);
+}
+
 // TODO: Need to move the "create file if it doesn't exist" logic to a more appropriate place, this is just temporary for testing purposes
 void FStrataModule::OpenSettingsFile() {
 	FString SettingsPath = FPaths::ProjectPluginsDir() / TEXT("StrataPluginUE/Resources/StrataSettings.json");
-	
+
 	FString AbsPath = FPaths::ConvertRelativePathToFull(SettingsPath);
 	FPaths::NormalizeFilename(AbsPath);
 
