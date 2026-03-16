@@ -39,6 +39,41 @@ TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 
 	MenuBuilder.BeginSection("StrataActions", LOCTEXT("StrataActionsHeader", "Strata Tools"));
 
+	// Duplicate this to add more menu buttons
+	MenuBuilder.AddMenuEntry(
+		LOCTEXT("ExtraActionLabel", "Add/Remove"),
+		LOCTEXT("ExtraActionTooltip", "Add or remove files for the current change."),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([]() {
+			// Everything inside of this function will be executed on-click
+			FText DialogText = LOCTEXT("PluginButtonDialogText", "[Temporary] This is where the add/remove menu would pop up.");
+			FMessageDialog::Open(EAppMsgType::Ok, DialogText);
+			}
+		))
+	);
+
+	MenuBuilder.AddMenuEntry(
+		LOCTEXT("ExtraActionLabel", "Commit"),
+		LOCTEXT("ExtraActionTooltip", "Review your changes and commit them."),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([]() {
+			FText DialogText = LOCTEXT("PluginButtonDialogText", "[Temporary] This is where the commit menu would pop up.");
+			FMessageDialog::Open(EAppMsgType::Ok, DialogText);
+			}
+		))
+	);
+
+	MenuBuilder.AddMenuEntry(
+		LOCTEXT("ExtraActionLabel", "Push"),
+		LOCTEXT("ExtraActionTooltip", "Review and push your committed changes."),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([]() {
+			FText DialogText = LOCTEXT("PluginButtonDialogText", "[Temporary] This is where the push menu would pop up.");
+			FMessageDialog::Open(EAppMsgType::Ok, DialogText);
+			}
+		))
+	);
+
 	// Duplicate this to add more submenus
 	MenuBuilder.AddSubMenu(
 		LOCTEXT("ExtraActionLabel", "Branch Options"),
@@ -46,7 +81,6 @@ TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 		FNewMenuDelegate::CreateRaw(this, &FStrataModule::GenerateBranchMenu)
 	);
 
-	// Duplicate this to add more menu buttons
 	MenuBuilder.AddMenuEntry(
 		LOCTEXT("ExtraActionLabel", "Open CLI..."),
 		LOCTEXT("ExtraActionTooltip", "Open Strata's Command Line Interface."),
@@ -54,7 +88,6 @@ TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 		FUIAction(FExecuteAction::CreateRaw(this, &FStrataModule::OpenCLI))
 	);
 
-	// Duplicate this to add more menu buttons
 	MenuBuilder.AddMenuEntry(
 		LOCTEXT("ExtraActionLabel", "Settings..."), // Buttons that open external programs should end with "..."
 		LOCTEXT("ExtraActionTooltip", "Open Settings via a text editor."),
@@ -73,7 +106,7 @@ void FStrataModule::GenerateBranchMenu(FMenuBuilder& MenuBuilder)
 
 	MenuBuilder.AddMenuEntry(
 		LOCTEXT("ExtraActionLabel", "Change current branch"),
-		LOCTEXT("ExtraActionTooltip", "Change current working branch"),
+		LOCTEXT("ExtraActionTooltip", "Change current working branch."),
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateLambda([]() {
 			// Everything inside of this function will be executed on-click
