@@ -4,6 +4,14 @@
 #include "StrataStyle.h"
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+#include "Dom/JsonObject.h"
+#include "HttpModule.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
 
 
 
@@ -93,6 +101,13 @@ TSharedRef<SWidget> FStrataModule::GenerateStrataMenu()
 		LOCTEXT("ExtraActionTooltip", "Open Settings via a text editor."),
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateRaw(this, &FStrataModule::OpenSettingsFile))
+	);
+
+	MenuBuilder.AddMenuEntry(
+		LOCTEXT("ExtraActionLabel", "Test Server Connection"),
+		LOCTEXT("ExtraActionTooltip", "Verifies the server is connected and healthy."),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateRaw(this, &FStrataModule::TestServerConnection))
 	);
 
 	MenuBuilder.EndSection();
@@ -242,19 +257,134 @@ void FStrataModule::OpenCLI() {
 
 // TODO: Need to move the "create file if it doesn't exist" logic to a more appropriate place, this is just temporary for testing purposes
 void FStrataModule::OpenSettingsFile() {
-	FString SettingsPath = FPaths::ProjectPluginsDir() / TEXT("StrataPluginUE/Resources/StrataSettings.json");
-
-	FString AbsPath = FPaths::ConvertRelativePathToFull(SettingsPath);
-	FPaths::NormalizeFilename(AbsPath);
+	FString Path = FStrataModule::GetSettingsPath();
 
 	// Create file if it doesn't exist
-	if (!FPaths::FileExists(AbsPath))
+	if (!FPaths::FileExists(Path))
 	{
-		FString DefaultSettings = TEXT("{\n  \"cliPath\": \"\",\n  \"server\": \"\",\n  \"user\": \"\"\n}\n");
-		FFileHelper::SaveStringToFile(DefaultSettings, *AbsPath);
+		FString DefaultSettings = TEXT("{\n  \"cliPath\": \"\",\n  \"server\": \"http://localhost:8080\",\n  \"user\": \"\"\n}\n");
+		FFileHelper::SaveStringToFile(DefaultSettings, *Path);
 	}
 
-	FPlatformProcess::LaunchFileInDefaultExternalApplication(*AbsPath);
+	FPlatformProcess::LaunchFileInDefaultExternalApplication(*Path);
+}
+
+FString FStrataModule::GetSettingsPath() const {
+	//Grabs path and creates absolute path
+	FString SettingsPath = FPaths::ProjectPluginsDir() / TEXT("StrataPluginUE/Resources/StrataSettings.json");
+	FString AbsPath = FPaths::ConvertRelativePathToFull(SettingsPath);
+
+	//Normalize
+	FPaths::NormalizeFilename(AbsPath);
+
+	//Verification
+	//FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(AbsPath));
+
+	return AbsPath;
+}
+
+bool FStrataModule::LoadSettings(FString& OutServer, FString& OutCliPath, FString& OutUser) const
+{
+	OutServer.Empty();
+	OutCliPath.Empty();
+	OutUser.Empty();
+
+	const FString SettingsPath = GetSettingsPath();
+	UE_LOG(LogTemp, Warning, TEXT("LoadSettings: path = %s"), *SettingsPath);
+
+	if (!FPaths::FileExists(SettingsPath))
+	{
+		UE_LOG(LogTemp, Error, TEXT("LoadSettings: settings file does not exist."));
+		return false;
+	}
+
+	FString JsonString;
+	if (!FFileHelper::LoadFileToString(JsonString, *SettingsPath))
+	{
+		UE_LOG(LogTemp, Error, TEXT("LoadSettings: failed to read file."));
+		return false;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("LoadSettings: raw json = %s"), *JsonString);
+
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
+
+	if (!FJsonSerializer::Deserialize(Reader, JsonObject) || !JsonObject.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("LoadSettings: failed to parse JSON."));
+		return false;
+	}
+
+	JsonObject->TryGetStringField(TEXT("server"), OutServer);
+	JsonObject->TryGetStringField(TEXT("cliPath"), OutCliPath);
+	JsonObject->TryGetStringField(TEXT("user"), OutUser);
+
+	UE_LOG(LogTemp, Warning, TEXT("LoadSettings: server = %s"), *OutServer);
+	UE_LOG(LogTemp, Warning, TEXT("LoadSettings: cliPath = %s"), *OutCliPath);
+	UE_LOG(LogTemp, Warning, TEXT("LoadSettings: user = %s"), *OutUser);
+
+	return true;
+}
+
+void FStrataModule::TestServerConnection()
+{
+	FString Server;
+	FString CliPath;
+	FString User;
+
+	if (!LoadSettings(Server, CliPath, User))
+	{
+		FMessageDialog::Open(
+			EAppMsgType::Ok,
+			FText::FromString(TEXT("Failed to load StrataSettings.json."))
+		);
+		return;
+	}
+
+	if (Server.IsEmpty())
+	{
+		FMessageDialog::Open(
+			EAppMsgType::Ok,
+			FText::FromString(TEXT("The server field in StrataSettings.json is empty."))
+		);
+		return;
+	}
+
+	const FString Url = Server / TEXT("health");
+
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetURL(Url);
+	Request->SetVerb(TEXT("GET"));
+
+	Request->OnProcessRequestComplete().BindLambda(
+		[Url](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bWasSuccessful)
+		{
+			if (!bWasSuccessful || !HttpResponse.IsValid())
+			{
+				FMessageDialog::Open(
+					EAppMsgType::Ok,
+					FText::FromString(FString::Printf(
+						TEXT("Failed to reach STRATA server.\nURL: %s"),
+						*Url))
+				);
+				return;
+			}
+
+			const int32 StatusCode = HttpResponse->GetResponseCode();
+			const FString ResponseBody = HttpResponse->GetContentAsString();
+
+			FMessageDialog::Open(
+				EAppMsgType::Ok,
+				FText::FromString(FString::Printf(
+					TEXT("Connected.\nStatus: %d\nResponse: %s"),
+					StatusCode,
+					*ResponseBody))
+			);
+		}
+	);
+
+	Request->ProcessRequest();
 }
 
 #undef LOCTEXT_NAMESPACE

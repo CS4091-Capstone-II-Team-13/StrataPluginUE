@@ -43,6 +43,9 @@ public class Strata : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"Json",
+				"JsonUtilities",
+				"Http"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

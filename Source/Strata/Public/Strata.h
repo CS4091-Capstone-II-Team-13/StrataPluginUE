@@ -26,5 +26,7 @@ private:
 	void RegisterMenus();
 	void OpenCLI();
 	void OpenSettingsFile();
-
+	FString GetSettingsPath() const;
+	void TestServerConnection();
+	bool LoadSettings(FString& OutServer, FString& OutCliPath, FString& OutUser) const;
 };
